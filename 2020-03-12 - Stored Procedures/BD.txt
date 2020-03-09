@@ -6,6 +6,7 @@ create table product(
 
 create table package(
 	idPackage int unsigned auto_increment primary key,
+    idPackageGroup int unsigned not null,
     idProduct int unsigned not null,
     quantity int unsigned not null,
 	KEY FK_PACKAGE_PRODUCT_IDPRODUCT (idProduct),
@@ -14,10 +15,8 @@ create table package(
 
 create table sell(
 	idSell int unsigned auto_increment primary key,
-    idPackage int unsigned not null,
-    dhCreated DATETIME DEFAULT NOW(),
-	KEY FK_SELL_PACKAGE_IDPACKAGE (idPackage),
-    CONSTRAINT FK_SELL_PACKAGE_IDPACKAGE FOREIGN KEY (idPackage) REFERENCES package (idPackage)
+    idPackageGroup int unsigned not null,
+    dhCreated DATETIME DEFAULT NOW()
 );
 
 

@@ -1,0 +1,46 @@
+create table product(
+	idProduct int unsigned auto_increment primary key,
+    productName varchar(30),
+    stockQuantity int not null
+);
+
+create table package(
+	idPackage int unsigned auto_increment primary key,
+    idProduct int unsigned not null,
+    quantity int unsigned not null,
+	KEY FK_PACKAGE_PRODUCT_IDPRODUCT (idProduct),
+    CONSTRAINT FK_PACKAGE_PRODUCT_IDPRODUCT FOREIGN KEY (idProduct) REFERENCES product (idProduct)
+);
+
+create table sell(
+	idSell int unsigned auto_increment primary key,
+    idPackage int unsigned not null,
+    dhCreated DATETIME DEFAULT NOW(),
+	KEY FK_SELL_PACKAGE_IDPACKAGE (idPackage),
+    CONSTRAINT FK_SELL_PACKAGE_IDPACKAGE FOREIGN KEY (idPackage) REFERENCES package (idPackage)
+);
+
+
+INSERT INTO PRODUCT (productName, stockQuantity)
+VALUES
+('p1', 2),
+('p2', 2),
+('p3', 2),
+('p4', 2);
+
+
+INSERT INTO Package (idPackageGroup, idProduct, quantity)
+VALUES
+(1, 1, 1),
+(1, 2, 1),
+(1, 2, 1),
+(2, 3, 1);
+
+INSERT INTO sell (idPackageGroup)
+VALUES (1), (2);
+
+
+SELECT PRODUCT.PRODUCTNAME, PRODUCT.STOCKQUANTITY, PACKAGE.QUANTITY, (PRODUCT.STOCKQUANTITY - IF(PACKAGE.QUANTITY, PACKAGE.QUANTITY, 0)) AS RESTANTE
+FROM PRODUCT 
+LEFT JOIN PACKAGE ON PACKAGE.IDPRODUCT = PRODUCT.IDPRODUCT
+LEFT JOIN SELL ON SELL.IDPACKAGEGROUP = PACKAGE.IDPACKAGEGROUP

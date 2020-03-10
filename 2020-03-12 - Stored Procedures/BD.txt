@@ -9,7 +9,8 @@ create table package(
     idPackageGroup int unsigned not null,
     idProduct int unsigned not null,
     quantity int unsigned not null,
-	KEY FK_PACKAGE_PRODUCT_IDPRODUCT (idProduct),
+    status ENUM('OPEN', 'CLOSED') DEFAULT 'OPEN',
+	KEY FK_PACKAGE_PRODUCT_IDPRODUCT (idProduct),	
     CONSTRAINT FK_PACKAGE_PRODUCT_IDPRODUCT FOREIGN KEY (idProduct) REFERENCES product (idProduct)
 );
 
@@ -20,26 +21,74 @@ create table sell(
 );
 
 
+
+--------------------
+
+
+
 INSERT INTO PRODUCT (productName, stockQuantity)
 VALUES
-('p1', 2),
-('p2', 2),
-('p3', 2),
-('p4', 2);
+('p1', 290),
+('p2', 22),
+('p3', 120),
+('p4', 150);
 
 
 INSERT INTO Package (idPackageGroup, idProduct, quantity)
-VALUES
-(1, 1, 1),
-(1, 2, 1),
-(1, 2, 1),
-(2, 3, 1);
+SELECT 1, IDPRODUCT, 10 FROM PRODUCT WHERE PRODUCTNAME = 'P1';
 
-INSERT INTO sell (idPackageGroup)
-VALUES (1), (2);
+INSERT INTO Package (idPackageGroup, idProduct, quantity)
+SELECT 1, IDPRODUCT, 15 FROM PRODUCT WHERE PRODUCTNAME = 'P2';
+
+INSERT INTO Package (idPackageGroup, idProduct, quantity)
+SELECT 1, IDPRODUCT, 35 FROM PRODUCT WHERE PRODUCTNAME = 'P3';
 
 
-SELECT PRODUCT.PRODUCTNAME, PRODUCT.STOCKQUANTITY, PACKAGE.QUANTITY, (PRODUCT.STOCKQUANTITY - IF(PACKAGE.QUANTITY, PACKAGE.QUANTITY, 0)) AS RESTANTE
-FROM PRODUCT 
-LEFT JOIN PACKAGE ON PACKAGE.IDPRODUCT = PRODUCT.IDPRODUCT
-LEFT JOIN SELL ON SELL.IDPACKAGEGROUP = PACKAGE.IDPACKAGEGROUP
+------------------------------
+
+DELIMITER //
+ 
+CREATE PROCEDURE CREATE_SELL(IN p_idPackageGroup INT)
+BEGIN
+    DECLARE total  INT;
+    DECLARE counter INT;
+    DECLARE decrease_quantity INT;
+    DECLARE product INT;
+    DECLARE package_status BOOLEAN;
+    DECLARE package_id INT;
+    
+	SELECT COUNT(1) INTO total FROM Package WHERE idPackageGroup = p_idPackageGroup;
+	SET counter = 1;
+		
+	product_loop:  LOOP
+		IF  counter > total THEN 
+			LEAVE  product_loop;
+		END  IF;
+        SELECT idPackage INTO package_id FROM package WHERE status = 'OPEN' AND idPackageGroup = p_idPackageGroup LIMIT 1;
+		SELECT idProduct, quantity, status INTO product, decrease_quantity, package_status  FROM package WHERE idPackage = package_id;
+		UPDATE product SET stockQuantity = stockQuantity - (decrease_quantity) WHERE idProduct = product;
+		UPDATE package SET status = 'CLOSED' WHERE idPackage = package_id;
+		INSERT INTO Sell(idPackageGroup) VALUES (p_idPackageGroup);
+		SET counter = counter + 1;
+	END LOOP;
+END //
+ 
+DELIMITER ;
+
+----------------------------
+
+
+
+call CREATE_SELL(1);
+
+------------------------------------
+
+drop procedure create_sell;
+
+--------------------------------
+
+
+
+select * from package;
+select * from product;
+select * from sell;
